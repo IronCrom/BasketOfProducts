@@ -1,7 +1,8 @@
 import java.io.*;
 import java.util.Arrays;
 
-public class Basket {
+public class Basket implements Serializable {
+
     public long[] getPrices() {
         return prices;
     }
@@ -93,5 +94,24 @@ public class Basket {
 
     public void setAmounts(long[] amounts) {
         this.amounts = amounts;
+    }
+
+    public void saveBin(File file) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(file);
+             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            Basket basket = new Basket(productNames, prices);
+            basket.setAmounts(amounts);
+            oos.writeObject(basket);
+        }
+    }
+
+    public static Object loadFromBinFile(File file) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file);
+             ObjectInputStream ois = new ObjectInputStream(fis)) {
+            return ois.readObject();
+        }
+        catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
