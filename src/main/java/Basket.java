@@ -2,9 +2,16 @@ import java.io.*;
 import java.util.Arrays;
 
 public class Basket implements Serializable {
+    private String[] productNames;
+    private long[] amounts;
+    private long[] prices;
 
     public long[] getPrices() {
         return prices;
+    }
+
+    public String[] getProductNames() {
+        return productNames;
     }
 
     public void setPrices(long[] prices) {
@@ -14,15 +21,6 @@ public class Basket implements Serializable {
     public void setProductNames(String[] productNames) {
         this.productNames = productNames;
     }
-
-    private long[] prices;
-
-    public String[] getProductNames() {
-        return productNames;
-    }
-
-    private String[] productNames;
-    private long[] amounts;
 
     public Basket(String[] productNames, long[] prices) {
         this.productNames = productNames;
@@ -109,8 +107,7 @@ public class Basket implements Serializable {
         try (FileInputStream fis = new FileInputStream(file);
              ObjectInputStream ois = new ObjectInputStream(fis)) {
             return ois.readObject();
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
