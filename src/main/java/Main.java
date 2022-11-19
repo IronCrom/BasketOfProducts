@@ -2,7 +2,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -10,14 +12,18 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+    public static void main(String[] args) throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException, ParserConfigurationException, SAXException {
         Scanner scanner = new Scanner(System.in);
         ClientLog clientLog = new ClientLog();
-        GsonBuilder builder = new GsonBuilder();
-        Gson gson = builder.create();
+        GsonBuilder builderGson = new GsonBuilder();
+        Gson gson = builderGson.create();
 
-        File basketFile = new File("basket.json");
-        File logFile = new File("log.csv");
+//        File basketFile = new File("basket.json");
+//        File logFile = new File("log.csv");
+        File xmlFile = new File("shop.xml");
+        Config load = new Config().config(xmlFile, Config.config.load);
+        Config save = new Config().config(xmlFile, Config.config.save);
+        Config log = new Config().config(xmlFile, Config.config.log);
 
         Product[] products = {new Product(1, "Хлеб", 50),
                 new Product(2, "Молоко", 70),
@@ -35,10 +41,17 @@ public class Main {
         Basket basket = new Basket(productNames, prices);
         basket.setAmounts(amounts);
 
-        if (basketFile.exists()) {
+        if (load.isEnabled()) {
+            File loadFile = new File(load.getFileName());
+            if (load.getFormat().equals(Config.Format.json)) {
+                basket = gson.fromJson(new FileReader(loadFile), Basket.class);
+            }
+            if (load.getFormat().equals(Config.Format.text)) {
+                basket = Basket.loadFromTxtFile(loadFile);
+            }
             //basket = Basket.loadFromTxtFile(basketFile);
             //basket = (Basket) Basket.loadFromBinFile(basketFile);
-            basket = gson.fromJson(new FileReader(basketFile), Basket.class);
+            //basket = gson.fromJson(new FileReader(basketFile), Basket.class);
             basket.printCart();
             productNames = basket.getProductNames();
             prices = basket.getPrices();
@@ -51,9 +64,8 @@ public class Main {
 
             if ("end".equalsIgnoreCase(input)) {
                 basket.printCart();
-                clientLog.exportAsCSV(logFile);
-                try (FileWriter file = new FileWriter(basketFile)) {
-                    file.write(gson.toJson(basket));
+                if (log.isEnabled()) {
+                    clientLog.exportAsCSV(new File(log.getFileName()));
                 }
                 break;
             } else {
@@ -70,8 +82,18 @@ public class Main {
                 }
                 basket.addToCart(productNumber, productCount);
 
-                basket.saveBin(basketFile);
-                //basket.saveTxt(basketFile);
+                if (save.isEnabled()) {
+                    File saveFile = new File(save.getFileName());
+                    if (save.getFormat().equals(Config.Format.json)) {
+                        try (FileWriter file = new FileWriter(saveFile)) {
+                            file.write(gson.toJson(basket));
+                        }
+                    }
+                    if (save.getFormat().equals(Config.Format.text)) {
+                        basket.saveTxt(saveFile);
+                    }
+                }
+                //basket.saveBin(basketFile);
             }
         }
     }
