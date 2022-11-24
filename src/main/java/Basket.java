@@ -3,9 +3,15 @@ import java.util.Arrays;
 
 public class Basket implements Serializable {
     private String[] productNames;
+
+
+
     private long[] amounts;
     private long[] prices;
 
+    public long[] getAmounts() {
+        return amounts;
+    }
     public long[] getPrices() {
         return prices;
     }
